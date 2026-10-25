@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Young Earth vs. Old Earth | Eric M.</title>
+  
+  <!-- Google Fonts for editorial elegance -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Lora:ital,wght@0,400;0,600;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Three.js from CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <style>
+    :root {
+      --bg-dark: #07090e;
+      --card-bg: rgba(15, 20, 31, 0.72);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --accent-gold: #e2b368;
+      --accent-gold-light: #f7d598;
+      --accent-blue: #5b9bf8;
+      --text-main: #e2e8f0;
+      --text-muted: #94a3b8;
+      --quote-bg: rgba(226, 179, 104, 0.06);
+      --font-display: 'Cinzel', serif;
+      --font-body: 'Lora', Georgia, serif;
+      --font-ui: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-body);
+      font-size: 1.125rem;
+      line-height: 1.85;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    /* 3D Background Canvas */
+    #canvas-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    /* Layout Container */
+    .page-wrapper {
+      position: relative;
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 2.5rem 1.5rem 6rem;
+      z-index: 1;
+    }
+
+    /* Header */
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+      padding-top: 1.5rem;
+    }
+
+    .badge {
+      display: inline-block;
+      font-family: var(--font-ui);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent-gold);
+      background: rgba(226, 179, 104, 0.12);
+      border: 1px solid rgba(226, 179, 104, 0.35);
+      padding: 0.35rem 0.9rem;
+      border-radius: 999px;
+      margin-bottom: 1.25rem;
+    }
+
+    h1 {
+      font-family: var(--font-display);
+      font-size: clamp(2.2rem, 5vw, 3.4rem);
+      font-weight: 700;
+      line-height: 1.2;
+      color: #ffffff;
+      letter-spacing: 0.02em;
+      text-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+      margin-bottom: 0.75rem;
+    }
+
+    .subtitle {
+      font-family: var(--font-ui);
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    .author-tag {
+      color: var(--accent-gold);
+      font-weight: 600;
+    }
+
+    /* Sticky Audio Player Bar */
+    .audio-player-card {
+      position: sticky;
+      top: 1rem;
+      z-index: 50;
+      background: rgba(13, 18, 29, 0.88);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(226, 179, 104, 0.35);
+      border-radius: 18px;
+      padding: 1rem 1.4rem;
+      margin-bottom: 3.5rem;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.55), 0 0 20px rgba(226, 179, 104, 0.08);
+      font-family: var(--font-ui);
+    }
+
+    .player-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+
+    .player-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--accent-gold-light);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .player-title svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+
+    .player-controls {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .play-btn {
+      background: var(--accent-gold);
+      border: none;
+      outline: none;
+      color: #0d121d;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.25s ease;
+      box-shadow: 0 4px 14px rgba(226, 179, 104, 0.4);
+    }
+
+    .play-btn:hover {
+      transform: scale(1.06);
+      background: #f1c784;
+    }
+
+    .play-btn svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+
+    .progress-bar-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: 99px;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-gold), #ffd188);
+      border-radius: 99px;
+      width: 0%;
+      transition: width 0.1s linear;
+    }
+
+    .time-readout {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .speed-btn {
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: var(--text-main);
+      padding: 0.3rem 0.6rem;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+
+    .speed-btn:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    /* Editorial Prose Styling */
+    .prose-section {
+      background: var(--card-bg);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 2.75rem 2.5rem;
+      margin-bottom: 2.5rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    p {
+      margin-bottom: 1.5rem;
+    }
+
+    p:last-child {
+      margin-bottom: 0;
+    }
+
+    h2 {
+      font-family: var(--font-display);
+      font-size: 1.75rem;
+      color: #fff;
+      margin-top: 1.5rem;
+      margin-bottom: 1.25rem;
+      letter-spacing: 0.03em;
+      border-bottom: 1px solid rgba(226, 179, 104, 0.2);
+      padding-bottom: 0.6rem;
+    }
+
+    h3 {
+      font-family: var(--font-ui);
+      font-size: 1.25rem;
+      color: var(--accent-gold);
+      margin-top: 1.75rem;
+      margin-bottom: 0.75rem;
+      font-weight: 600;
+    }
+
+    /* Quotes */
+    blockquote {
+      background: var(--quote-bg);
+      border-left: 3px solid var(--accent-gold);
+      padding: 1.25rem 1.6rem;
+      margin: 1.75rem 0;
+      border-radius: 0 12px 12px 0;
+      font-style: italic;
+      color: #f1f5f9;
+    }
+
+    .quote-author {
+      display: block;
+      margin-top: 0.6rem;
+      font-style: normal;
+      font-family: var(--font-ui);
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--accent-gold);
+      letter-spacing: 0.05em;
+    }
+
+    /* Scriptural Proofs Block */
+    .scripture-box {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      padding: 1.25rem 1.5rem;
+      border-radius: 12px;
+      margin: 1.5rem 0;
+      font-size: 1rem;
+    }
+
+    .scripture-box p {
+      margin-bottom: 0.75rem;
+    }
+
+    .verse-ref {
+      font-weight: 600;
+      color: var(--accent-gold-light);
+    }
+
+    /* Structured Creation Grid */
+    .creation-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+      margin: 2rem 0;
+      font-family: var(--font-ui);
+    }
+
+    @media (max-width: 640px) {
+      .creation-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .creation-col {
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 14px;
+      padding: 1.4rem;
+    }
+
+    .creation-col h4 {
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent-gold);
+      margin-bottom: 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 0.5rem;
+    }
+
+    .creation-item {
+      margin-bottom: 1rem;
+      font-size: 0.92rem;
+      line-height: 1.5;
+    }
+
+    .day-num {
+      display: inline-block;
+      font-weight: 700;
+      color: #fff;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 0.1rem 0.45rem;
+      border-radius: 4px;
+      margin-right: 0.4rem;
+      font-size: 0.8rem;
+    }
+
+    /* Scholars Badges */
+    .scholars-wrapper {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin: 1.5rem 0;
+    }
+
+    .scholar-chip {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 0.35rem 0.85rem;
+      border-radius: 30px;
+      font-family: var(--font-ui);
+      font-size: 0.85rem;
+      color: #cbd5e1;
+    }
+
+    .scholar-chip.highlight {
+      border-color: rgba(226, 179, 104, 0.4);
+      color: var(--accent-gold-light);
+    }
+
+    /* Fallacy list */
+    .fallacy-list {
+      list-style: none;
+      margin: 1.5rem 0;
+      font-family: var(--font-ui);
+      font-size: 0.95rem;
+    }
+
+    .fallacy-list li {
+      background: rgba(0, 0, 0, 0.25);
+      border-left: 3px solid var(--accent-blue);
+      padding: 0.9rem 1.2rem;
+      margin-bottom: 0.75rem;
+      border-radius: 0 8px 8px 0;
+    }
+
+    .fallacy-name {
+      display: inline-block;
+      font-weight: 700;
+      color: var(--accent-blue);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-left: 0.4rem;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 3rem 1rem;
+      font-family: var(--font-ui);
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    @media (max-width: 768px) {
+      .prose-section {
+        padding: 2rem 1.4rem;
+      }
+      .audio-player-card {
+        padding: 0.85rem 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Three.js Cosmic Canvas -->
+  <div id="canvas-container"></div>
+
+  <div class="page-wrapper">
+
+    <!-- Header Section -->
+    <header>
+      <span class="badge">Theological &amp; Scientific Inquiries</span>
+      <h1>Young Earth vs. Old Earth</h1>
+      <p class="subtitle">A presentation by <span class="author-tag">Eric M.</span></p>
+    </header>
+
+    <!-- Interactive Sticky Audio Player -->
+    <div class="audio-player-card">
+      <audio id="messageAudio" preload="metadata">
+        <source src="audio.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+      </audio>
+
+      <div class="player-header">
+        <div class="player-title">
+          <svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+          Audio Lecture Recording
+        </div>
+        <button class="speed-btn" id="speedBtn" title="Cycle playback speed">1.0x</button>
+      </div>
+
+      <div class="player-controls">
+        <button class="play-btn" id="playBtn" aria-label="Play Audio">
+          <svg id="playIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          <svg id="pauseIcon" viewBox="0 0 24 24" style="display:none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+        </button>
+
+        <div class="progress-bar-container">
+          <div class="progress-bar" id="progressBar">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+          <div class="time-readout">
+            <span id="currentTime">00:00</span>
+            <span id="duration">--:--</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN ESSAY CONTENT -->
+
+    <!-- Section 1 -->
+    <section class="prose-section">
+      <h2>The Core Conflict: Decoupling Faith and Reality</h2>
+      <p>
+        The young-vs-old creation debate is one that is very interesting to me. It is simultaneously one of the least important and most important questions facing us. It is one of the least important because it doesn’t really pertain to anything that matters in an ultimate sense. There’s not going to be a line down the middle of heaven with a sign that says, <em>“Young-earthers this side / Old-earthers this side.”</em>
+      </p>
+      <p>
+        But I think it’s one of the most important questions, as well. Not because the answer is critical, but because our method of finding truth is. This question is a symptom of a disease that is sweeping through the modern church. I’m not saying that your 90-year-old grandmother who believes the earth is 8,000 years old needs us to grab her, shake her, and convince her that the earth is old. That isn’t, in my mind, the problem. The problem is the people who have taken this as a hill on which to die.
+      </p>
+      <p>
+        The first and largest problem is that they are willing to decouple faith and reality. Any reality that doesn’t fit the box they built is rejected simply because it doesn’t fit in the box. They make every decision based on the question, <em>“Does this fit young earth creationism?”</em> not <em>“Does this fit reality?”</em>
+      </p>
+
+      <blockquote>
+        “If anyone shall set the authority of Holy Writ against clear and manifest reason, he who does this knows not what he has undertaken; for he opposes to the truth not the meaning of the Bible, which is beyond his comprehension, but rather his own interpretation; not what is in the Bible, but what he has found in himself and imagines to be there.”
+        <span class="quote-author">— St. Augustine of Hippo</span>
+      </blockquote>
+
+      <blockquote>
+        “If in our exploration of God's magnificent creation, we find something at odds with our interpretation of the Torah, then it is our understanding of the Torah that is mistaken. If there is a difference between God's world and our understanding of God's words, the fallibility is with us. Who would be so prideful as to claim perfect understanding of God's words?”
+        <span class="quote-author">— Ancient Rabbinic Principle</span>
+      </blockquote>
+
+      <p>
+        If our investigation of God’s world disagrees with scripture, who wins? That is a trick question. Obviously, if the Bible is accurate, God’s world cannot disagree with God’s Word. A more accurate question is: <em>“If our investigation of God’s world disagrees with a particular interpretation of scripture, who wins?”</em> The recurring error that brings shame on the name of Christ is equating our fallible human interpretations with God’s infallible words.
+      </p>
+    </section>
+
+    <!-- Section 2 -->
+    <section class="prose-section">
+      <h2>The Lessons of History: Galileo and Geocentrism</h2>
+      <p>
+        Consider Galileo and the Church. From the earliest times, the church taught that the earth was flat and that it stood immobile while the celestial bodies rotated around it. They had two things on their side. First, it was obvious: the ground does not feel like it moves, and the sun visibly traverses the sky. 
+      </p>
+      <p>
+        Second, they had literal interpretations of scriptural passages:
+      </p>
+
+      <div class="scripture-box">
+        <p><span class="verse-ref">Joshua 10:13:</span> “So the sun stood still, and the moon stopped, till the nation avenged itself on its enemies...”</p>
+        <p><span class="verse-ref">Psalm 93:1:</span> “The world indeed is firmly established; it cannot be moved.”</p>
+        <p><span class="verse-ref">Psalm 104:5:</span> “He set the earth on its foundations, never to be moved.”</p>
+        <p><span class="verse-ref">Ecclesiastes 1:5:</span> “The sun rises and the sun sets; it hurries back to where it rises.”</p>
+      </div>
+
+      <p>
+        These passages strongly imply a stationary earth. When Copernicus offered formulas explaining planetary motion, instead of listening, the institutional church elevated geocentrism into an article of faith. They insisted that the issue was God’s certain revelation against man’s flawed speculations. When Galileo constructed a telescope and confirmed heliocentrism, he was forced to recant under threat of torture and placed under permanent house arrest.
+      </p>
+      <p>
+        Later, the church had to acknowledge the physical reality of the solar system. Did changing their interpretation make them faithless? Or were they faithless when they set an interpretation against what God’s creation clearly revealed through the lens?
+      </p>
+      <p>
+        We see similar linguistic updates throughout history: Belshazzar in Daniel clarified from "king" to "regent" through archaeology, and Haman’s punishment in Esther refined from "hanging" to "impaling," both substantiated by historical findings without harming the integrity of the Word.
+      </p>
+      <p>
+        In Romans 1, Paul asserts that the invisible attributes of God are clearly revealed in creation. Jesus Himself appealed to objective, tangible miracles in the physical realm as validation of His divine claim: <em>“Believe on the basis of the works themselves.”</em> He never demanded faith that ignored sensory reality.
+      </p>
+    </section>
+
+    <!-- Section 3 -->
+    <section class="prose-section">
+      <h2>How Science Operates: Logic vs. Conspiracy</h2>
+      <p>
+        A widespread misconception inside the church is that modern science functions as a secretive, biased conspiracy dedicated to disproving God. In actual practice, scientific research runs on radical transparency called <strong>peer review</strong>.
+      </p>
+      <p>
+        When researchers develop a hypothesis, they do not just broadcast it. They submit their mathematics, experimental parameters, raw datasets, and conclusions for peer review. The entire worldwide scientific community tries to tear it apart, detect flaws, and duplicate results. Only when findings consistently survive relentless scrutiny can they form an established theory.
+      </p>
+      <p>
+        The exact same physics and mathematics that power <strong>GPS satellites, MRI scanners, microwave ovens, and LED lighting</strong> are the identical formulas used to measure the age of the cosmos.
+      </p>
+      <p>
+        Dozens of independent methodologies—cosmic microwave background radiation, stellar evolution lifecycles, radiometric isotope decay, galactic redshift, and ice-sheet chronologies—consistently converge on an age between <strong>13 and 15 billion years</strong>.
+      </p>
+      <p>
+        Scientists are not conspirators orchestrating a global facade. The greatest ambition of any young physicist or astronomer is to find an empirical anomaly that overturns standard paradigms—to be the next Einstein or Newton. If there were repeatable evidence for a 6,000-year-old cosmos, researchers would compete to publish it.
+      </p>
+    </section>
+
+    <!-- Section 4 -->
+    <section class="prose-section">
+      <h2>The Ancient Hebrew Perspective: Gerald Schroeder's Analysis</h2>
+      <p>
+        Dr. Gerald Schroeder, an MIT-trained nuclear physicist, approached this question by examining ancient Jewish commentators (such as Nachmanides and Maimonides) who wrote long before modern cosmological debates arose.
+      </p>
+      <p>
+        The ancient rabbis noted that the term <em>Yom</em> (day) in Genesis 1 cannot be a standard solar day of 24 hours. Why? Because the sun, moon, and stars do not appear until <strong>Day 4</strong>. A solar day on Earth is measured by sunrise to sunrise. Without celestial bodies, an Earth-bound solar day is physically meaningless in the narrative.
+      </p>
+      <p>
+        Furthermore, <strong>Day 7</strong> has no closing formula. Days 1 through 6 conclude with "and there was evening and there was morning." Day 7 contains no such boundary; scripture indicates that God entered His Sabbath rest from creation, a state that continues into the present era (Hebrews 4).
+      </p>
+
+      <h3>Erev and Boker: Chaos and Order</h3>
+      <p>
+        In classical Hebrew, the refrain usually translated as <em>"there was evening and there was morning"</em> carries profound root meanings:
+      </p>
+      <ul>
+        <li><strong>Erev (ערב):</strong> Root meaning corresponds to <em>obscurity, disorder, mixture, or chaos</em>. (e.g., the "mixed multitude" in Exodus).</li>
+        <li><strong>Boker (בקר):</strong> Root meaning signifies <em>clearing, discernment, order, and dawn</em>.</li>
+      </ul>
+      <p>
+        To ancient scholars, the refrain reads: <em>“There was chaos, and then there was order—Day One.”</em> Creation is the sovereign narrative of God imposing divine order, form, and purpose onto the primordial void.
+      </p>
+
+      <h3>The Literary Symmetry of Genesis 1</h3>
+      <p>The six creation days are arranged not as a stop-watch journal, but as an intentional parallel framework:</p>
+
+      <div class="creation-grid">
+        <div class="creation-col">
+          <h4>Forming the Domains (Separation)</h4>
+          <div class="creation-item">
+            <span class="day-num">Day 1</span>
+            <strong>Light and Darkness:</strong> Separation of day and night.
+          </div>
+          <div class="creation-item">
+            <span class="day-num">Day 2</span>
+            <strong>Sky and Waters:</strong> Separation of the firmament from the deep.
+          </div>
+          <div class="creation-item">
+            <span class="day-num">Day 3</span>
+            <strong>Land and Seas:</strong> Dry ground emerges; vegetation springs forth.
+          </div>
+        </div>
+
+        <div class="creation-col">
+          <h4>Filling the Domains (Rulers &amp; Inhabitants)</h4>
+          <div class="creation-item">
+            <span class="day-num">Day 4</span>
+            <strong>Luminaries:</strong> Sun, moon, and stars set to rule Day 1's light.
+          </div>
+          <div class="creation-item">
+            <span class="day-num">Day 5</span>
+            <strong>Birds &amp; Sea Life:</strong> Created to fill Day 2's sky and waters.
+          </div>
+          <div class="creation-item">
+            <span class="day-num">Day 6</span>
+            <strong>Land Animals &amp; Humanity:</strong> Formed to inhabit and rule Day 3's land.
+          </div>
+        </div>
+      </div>
+
+      <p>
+        Genesis 1 is an exquisite theological manifesto against the pagan cosmologies of the ancient Near East, demonstrating that God alone forms, fills, and orders all realms of existence.
+      </p>
+    </section>
+
+    <!-- Section 5 -->
+    <section class="prose-section">
+      <h2>The Cloud of Witnesses</h2>
+      <p>
+        Dogmatic Young Earth creationism is not the unanimous historical stance of orthodox scholarship. A vast company of revered theologians and biblical scholars have recognized that an ancient universe does not compromise biblical authority:
+      </p>
+
+      <div class="scholars-wrapper">
+        <span class="scholar-chip highlight">St. Augustine</span>
+        <span class="scholar-chip">B.B. Warfield</span>
+        <span class="scholar-chip">Charles Spurgeon</span>
+        <span class="scholar-chip">R.C. Sproul</span>
+        <span class="scholar-chip">J.I. Packer</span>
+        <span class="scholar-chip">Norman Geisler</span>
+        <span class="scholar-chip">William Lane Craig</span>
+        <span class="scholar-chip">John Lennox</span>
+        <span class="scholar-chip">Gleason Archer</span>
+        <span class="scholar-chip">Franz Delitzsch</span>
+        <span class="scholar-chip">J. Gresham Machen</span>
+        <span class="scholar-chip">Carl F. H. Henry</span>
+        <span class="scholar-chip">Edward J. Young</span>
+        <span class="scholar-chip">Billy Graham</span>
+        <span class="scholar-chip">John Piper</span>
+        <span class="scholar-chip">R.A. Torrey</span>
+        <span class="scholar-chip">Hank Hanegraaff</span>
+        <span class="scholar-chip">J.P. Moreland</span>
+      </div>
+      <p>
+        These thinkers defended inerrancy, fought theological liberalism, and championed the faith without demanding that believers adopt a 6,000-year timescale.
+      </p>
+    </section>
+
+    <!-- Section 6 -->
+    <section class="prose-section">
+      <h2>Addenda: Critical Analysis of Common Claims</h2>
+
+      <h3>1. Animal Death Before the Fall</h3>
+      <p>
+        The claim that no animal could have died before the Fall creates insurmountable biological and theological issues. Carnivores (lions, raptors, sharks) are intricately engineered with specialized dentition, hunting instincts, and digestive chemistry tailored for animal flesh. 
+      </p>
+      <p>
+        If predator physiology only appeared after Adam sinned, one must posit an unmentioned second creation event where God redesigned thousands of animal species.
+      </p>
+      <p>
+        The New Testament addresses this directly: Romans 5:12 and 1 Corinthians 15:21 state that death entered the human race through Adam, resulting in spiritual condemnation and mortality for <em>man</em>. Equating this with biological cellular death in the animal kingdom distorts the specific theological focus of the Atonement.
+      </p>
+
+      <h3>2. Common Fallacies in Young Earth Apologetics</h3>
+      <ul class="fallacy-list">
+        <li>
+          <em>“If early Genesis isn’t literal history, all Christian doctrine collapses.”</em>
+          <span class="fallacy-name">False Dilemma / Slippery Slope</span>
+        </li>
+        <li>
+          <em>“Theistic evolution implies a bumbling, incompetent Creator.”</em>
+          <span class="fallacy-name">Strawman</span>
+        </li>
+        <li>
+          <em>“Yom + number always means 24 hours elsewhere, so it must here.”</em>
+          <span class="fallacy-name">False Generalization</span>
+        </li>
+        <li>
+          <em>“One C-14 data point gave an irregular date, therefore all radiometric decay is useless.”</em>
+          <span class="fallacy-name">Red Herring</span>
+        </li>
+        <li>
+          <em>“You weren’t there, so you cannot know what happened in the past.”</em>
+          <span class="fallacy-name">Anti-Forensic Fallacy</span>
+        </li>
+      </ul>
+
+      <h3>3. The Clocks of Creation</h3>
+      <p>
+        Nature contains multiple independent, interlocking chronometers that confirm deep time:
+      </p>
+      <ul>
+        <li><strong>Starlight &amp; Cosmic Expansion:</strong> Light traveling from galaxies millions of light-years away at an unchanging physical constant ($c$).</li>
+        <li><strong>Ice Core Strata:</strong> Continuous annual ice layers in Greenland and Antarctica reaching back 740,000+ years.</li>
+        <li><strong>Radiometric Isotopes:</strong> Multiple decay chains (Potassium-Argon, Rubidium-Strontium, Uranium-Lead) cross-calibrating the age of meteorites and rock strata at 4.5 billion years.</li>
+        <li><strong>Solar Life Cycle:</strong> Helioseismic calculations confirming our Sun is midway through its 10-billion-year lifespan at ~4.6 billion years.</li>
+      </ul>
+
+      <h3>Conclusion</h3>
+      <p>
+        When young people discover that the earth is demonstrably billions of years old, an uncompromising Young Earth ultimatum often leads them to discard their faith entirely, assuming that Christianity demands denial of physical reality. 
+      </p>
+      <p>
+        God is the author of both the Book of Scripture and the Book of Nature. When both are read with humility, scholarship, and reverence, truth remains unified.
+      </p>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+      <p>&copy; Eric M. &bull; "Young Earth vs. Old Earth"</p>
+      <p style="margin-top: 0.5rem; opacity: 0.6;">Designed for web deployment &bull; Three.js cosmic canvas</p>
+    </footer>
+
+  </div>
+
+  <!-- Interactive Three.js + Audio Logic -->
+  <script>
+    /* ========================================================
+       1. THREE.JS COSMIC STARFIELD & NEBULA PARTICLES
+       ======================================================== */
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    
+    // Add faint atmospheric fog
+    scene.fog = new THREE.FogExp2(0x07090e, 0.00075);
+
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 3000);
+    camera.position.z = 1000;
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    container.appendChild(renderer.domElement);
+
+    // Starfield Generation
+    const starsCount = 2800;
+    const starGeometry = new THREE.BufferGeometry();
+    const starPositions = new Float32Array(starsCount * 3);
+    const starColors = new Float32Array(starsCount * 3);
+
+    const palette = [
+      new THREE.Color('#ffffff'),
+      new THREE.Color('#e2b368'),
+      new THREE.Color('#8cb6f7'),
+      new THREE.Color('#fcd595')
+    ];
+
+    for (let i = 0; i < starsCount; i++) {
+      const idx = i * 3;
+      starPositions[idx] = (Math.random() - 0.5) * 2600;
+      starPositions[idx + 1] = (Math.random() - 0.5) * 2600;
+      starPositions[idx + 2] = (Math.random() - 0.5) * 2600;
+
+      const color = palette[Math.floor(Math.random() * palette.length)];
+      starColors[idx] = color.r;
+      starColors[idx + 1] = color.g;
+      starColors[idx + 2] = color.b;
+    }
+
+    starGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+    starGeometry.setAttribute('color', new THREE.BufferAttribute(starColors, 3));
+
+    // Particle Texture Generator
+    function createCircleTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 32;
+      canvas.height = 32;
+      const ctx = canvas.getContext('2d');
+      const gradient = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
+      gradient.addColorStop(0, 'rgba(255,255,255,1)');
+      gradient.addColorStop(0.3, 'rgba(255,255,255,0.7)');
+      gradient.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = gradient;
+      ctx.beginPath();
+      ctx.arc(16, 16, 16, 0, Math.PI * 2);
+      ctx.fill();
+      return new THREE.CanvasTexture(canvas);
+    }
+
+    const starMaterial = new THREE.PointsMaterial({
+      size: 4.5,
+      vertexColors: true,
+      map: createCircleTexture(),
+      transparent: true,
+      opacity: 0.85,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+
+    const starField = new THREE.Points(starGeometry, starMaterial);
+    scene.add(starField);
+
+    // Subtle Celestial Ring / Orbit
+    const ringGeo = new THREE.RingGeometry(420, 421.5, 90);
+    const ringMat = new THREE.MeshBasicMaterial({
+      color: 0xe2b368,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.12
+    });
+    const celestialRing = new THREE.Mesh(ringGeo, ringMat);
+    celestialRing.rotation.x = Math.PI / 3;
+    scene.add(celestialRing);
+
+    // Animation Loop
+    let mouseX = 0, mouseY = 0;
+    window.addEventListener('mousemove', (e) => {
+      mouseX = (e.clientX - window.innerWidth / 2) * 0.05;
+      mouseY = (e.clientY - window.innerHeight / 2) * 0.05;
+    });
+
+    const clock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const elapsedTime = clock.getElapsedTime();
+
+      starField.rotation.y = elapsedTime * 0.015;
+      starField.rotation.x = elapsedTime * 0.007;
+
+      celestialRing.rotation.z = elapsedTime * 0.02;
+
+      camera.position.x += (mouseX - camera.position.x) * 0.03;
+      camera.position.y += (-mouseY - camera.position.y) * 0.03;
+      camera.lookAt(scene.position);
+
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    // Window Resizing
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    /* ========================================================
+       2. AUDIO PLAYER LOGIC
+       ======================================================== */
+    const audio = document.getElementById('messageAudio');
+    const playBtn = document.getElementById('playBtn');
+    const playIcon = document.getElementById('playIcon');
+    const pauseIcon = document.getElementById('pauseIcon');
+    const progressBar = document.getElementById('progressBar');
+    const progressFill = document.getElementById('progressFill');
+    const currentTimeEl = document.getElementById('currentTime');
+    const durationEl = document.getElementById('duration');
+    const speedBtn = document.getElementById('speedBtn');
+
+    function formatTime(seconds) {
+      if (isNaN(seconds)) return '00:00';
+      const m = Math.floor(seconds / 60);
+      const s = Math.floor(seconds % 60);
+      return `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+    }
+
+    playBtn.addEventListener('click', () => {
+      if (audio.paused) {
+        audio.play().then(() => {
+          playIcon.style.display = 'none';
+          pauseIcon.style.display = 'block';
+        }).catch(err => {
+          console.warn("Audio file 'audio.mp3' not found yet or playback blocked.", err);
+          alert("Audio notice: Ensure 'audio.mp3' is placed in the root directory alongside index.html.");
+        });
+      } else {
+        audio.pause();
+        playIcon.style.display = 'block';
+        pauseIcon.style.display = 'none';
+      }
+    });
+
+    audio.addEventListener('timeupdate', () => {
+      if (!isNaN(audio.duration) && audio.duration > 0) {
+        const pct = (audio.currentTime / audio.duration) * 100;
+        progressFill.style.width = pct + '%';
+        currentTimeEl.textContent = formatTime(audio.currentTime);
+      }
+    });
+
+    audio.addEventListener('loadedmetadata', () => {
+      durationEl.textContent = formatTime(audio.duration);
+    });
+
+    // Scrubber click
+    progressBar.addEventListener('click', (e) => {
+      const rect = progressBar.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const width = rect.width;
+      if (!isNaN(audio.duration)) {
+        audio.currentTime = (clickX / width) * audio.duration;
+      }
+    });
+
+    // Playback Speed Toggle
+    const speeds = [1.0, 1.25, 1.5, 1.75, 2.0];
+    let speedIdx = 0;
+    speedBtn.addEventListener('click', () => {
+      speedIdx = (speedIdx + 1) % speeds.length;
+      const newSpeed = speeds[speedIdx];
+      audio.playbackRate = newSpeed;
+      speedBtn.textContent = newSpeed.toFixed(1) + 'x';
+    });
+  </script>
+</body>
+</html>
